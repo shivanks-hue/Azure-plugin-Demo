@@ -92,7 +92,6 @@ steps:
   displayName: 'Install Chrome and ChromeDriver'
 
 # Step 4: Download and Start LambdaTest Tunnel Automatically
-# Step 4: Download and Start LambdaTest Tunnel Automatically
 - powershell: |
     $tunnelExe = "LT.exe"
     $ltFolder = "$(LT_TUNNEL_DIR)"
@@ -102,7 +101,7 @@ steps:
     }
 
     # Correct URL to download the LambdaTest Tunnel executable
-    Invoke-WebRequest -Uri "https://downloads.lambdatest.com/tunnel/v3/windows/amd64/LT.exe" -OutFile "$ltFolder\$tunnelExe"
+    Invoke-WebRequest -Uri "https://downloads.lambdatest.com/tunnel/v3/windows/386/LT.exe" -OutFile "$ltFolder\$tunnelExe"
 
     # Start the tunnel daemon
     $username = "$(ltUserName)"
