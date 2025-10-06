@@ -103,7 +103,7 @@ steps:
     }
 
     # Download tunnel
-    Invoke-WebRequest -Uri "https://downloads.lambdatest.com/tunnel/$tunnelVersion/$tunnelZip" -OutFile "$ltFolder\$tunnelZip"
+    Invoke-WebRequest -Uri "https://downloads.lambdatest.com/tunnel/v3/windows/64bit/LT_Windows.zip" -OutFile "$ltFolder\$tunnelZip"
 
     # Extract
     Expand-Archive -Path "$ltFolder\$tunnelZip" -DestinationPath $ltFolder -Force
