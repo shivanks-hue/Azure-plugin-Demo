@@ -110,8 +110,8 @@ steps:
     Remove-Item -Force "$ltFolder\$tunnelZip"
 
     # Start the tunnel daemon
-    $username = "$(ltUserName)"
-    $accessKey = "$(ltAccessKey)"
+    $username = "devanshsingh"  # Replace with your actual LambdaTest username
+    $accessKey = "LT_kjmzzJCYu70kReE7lwE0w2MOXLWg2q72EMh68BOot6fYI1c"  # Replace with your actual LambdaTest access key
     $startArgs = "--user $username --key $accessKey --logfile $ltFolder\lt.log --daemon"
     Start-Process -FilePath "$ltFolder\$tunnelExe" -ArgumentList $startArgs -NoNewWindow
 
