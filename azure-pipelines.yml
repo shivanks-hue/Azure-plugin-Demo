@@ -24,14 +24,19 @@ steps:
     restoreKeys: |
       maven | "$(Agent.OS)"
 
-# Step 3: Install Google Chrome and ChromeDriver using PowerShell (improved version detection)
+# Step 3: Install Google Chrome and ChromeDriver using PowerShell (with multiple Chrome version detection methods)
 - powershell: |
-    # Check if Chrome installed
+    # Detect Chrome path
     $chromePath = "${Env:ProgramFiles}\Google\Chrome\Application\chrome.exe"
     if (-Not (Test-Path $chromePath)) {
       $chromePath = "${Env:ProgramFiles(x86)}\Google\Chrome\Application\chrome.exe"
     }
+    if (-Not (Test-Path $chromePath)) {
+      Write-Error "Google Chrome executable not found!"
+      exit 1
+    }
 
+    # Install Chrome if missing (unlikely if above paths exist, but kept for safety)
     if (-Not (Test-Path $chromePath)) {
       Write-Host "Installing Google Chrome..."
       Invoke-WebRequest -Uri https://dl.google.com/chrome/install/latest/chrome_installer.exe -OutFile chrome_installer.exe
@@ -41,22 +46,45 @@ steps:
       Write-Host "Google Chrome already installed at $chromePath"
     }
 
-    # Get Chrome version from registry (more reliable on Windows agents)
-    $chromeVersion = (Get-ItemProperty "HKLM:\SOFTWARE\Google\Chrome\BLBeacon").version
+    # Try to get Chrome version from multiple registry paths
+    $chromeVersion = $null
+
+    try {
+        $chromeVersion = (Get-ItemProperty "HKLM:\SOFTWARE\Google\Chrome\BLBeacon").version
+    } catch {}
+
     if (-not $chromeVersion) {
-        $chromeVersion = (Get-ItemProperty "HKLM:\SOFTWARE\WOW6432Node\Google\Chrome\BLBeacon").version
+        try {
+            $chromeVersion = (Get-ItemProperty "HKLM:\SOFTWARE\WOW6432Node\Google\Chrome\BLBeacon").version
+        } catch {}
     }
 
     if (-not $chromeVersion) {
-        throw "Cannot find Chrome version in registry"
+        try {
+            $chromeVersion = (Get-ItemProperty "HKCU:\Software\Google\Chrome\BLBeacon").version
+        } catch {}
     }
 
-    Write-Host "Chrome version from registry: $chromeVersion"
+    # Fallback: call chrome.exe --version if registry not found
+    if (-not $chromeVersion) {
+        Write-Host "Chrome version not found in registry, falling back to executable."
+        $versionOutput = & $chromePath --version
+        Write-Host "Chrome version output: $versionOutput"
+        # Parse version number from output string, e.g., "Google Chrome 117.0.5938.92"
+        $chromeVersion = ($versionOutput -split " ")[2]
+    }
+
+    if (-not $chromeVersion) {
+      Write-Error "Unable to determine Chrome version."
+      exit 1
+    }
+
+    Write-Host "Detected Chrome version: $chromeVersion"
 
     $chromeMajorVersion = $chromeVersion.Split('.')[0]
     Write-Host "Chrome major version: $chromeMajorVersion"
 
-    # Download ChromeDriver matching Chrome major version
+    # Download matching ChromeDriver version
     $chromedriverVersionUrl = "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$chromeMajorVersion"
     $chromedriverVersion = Invoke-RestMethod -Uri $chromedriverVersionUrl
     Write-Host "Matching ChromeDriver version: $chromedriverVersion"
