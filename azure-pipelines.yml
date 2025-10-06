@@ -27,7 +27,7 @@ steps:
 # Step 3: Install Google Chrome and ChromeDriver using PowerShell
 - powershell: |
     # Download and install Google Chrome silently if not installed
-    $chromePath = "${Env:ProgramFiles(x86)}\Google\Chrome\Application\chrome.exe"
+    $chromePath = "${Env:ProgramFiles}\Google\Chrome\Application\chrome.exe"
     if (-Not (Test-Path $chromePath)) {
       Write-Host "Installing Google Chrome..."
       Invoke-WebRequest -Uri https://dl.google.com/chrome/install/latest/chrome_installer.exe -OutFile chrome_installer.exe
