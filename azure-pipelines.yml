@@ -1,26 +1,16 @@
 trigger:
   - main
-
 pool:
   name: Default   # Your self-hosted Windows agent pool name
-
 variables:
   MAVEN_OPTS: "-Xmx1024m"
-  LT_TUNNEL_DIR: "$(Agent.TempDirectory)/lambdatest-tunnel"  # Use forward slashes in paths
-  ltUserName: "devanshsingh"  # Your LambdaTest username
-  ltAccessKey: "LT_kjmzzJCYu70kReE7lwE0w2MOXLWg2q72EMh68BOot6fYI1c"  # Your LambdaTest access key
-
 steps:
 - checkout: self
-
-
-
 # Step 1: Install JDK 21 using Chocolatey (or skip if already installed)
 - powershell: |
     choco install openjdk21 -y
     java -version
   displayName: 'Install JDK 21'
-
 # Step 2: Cache Maven dependencies
 - task: Cache@2
   inputs:
@@ -28,8 +18,7 @@ steps:
     path: '$(USERPROFILE)\.m2\repository'
     restoreKeys: |
       maven | "$(Agent.OS)"
-
-# Step 3: Install Google Chrome and ChromeDriver (with fallback for ChromeDriver)
+# Step 3: Install Google Chrome and ChromeDriver using PowerShell (with fallback for ChromeDriver)
 - powershell: |
     # Detect Chrome path
     $chromePath = "${Env:ProgramFiles}\Google\Chrome\Application\chrome.exe"
@@ -40,44 +29,45 @@ steps:
       Write-Error "Google Chrome executable not found!"
       exit 1
     }
-
+    # Install Chrome if missing (unlikely if above paths exist, but kept for safety)
+    if (-Not (Test-Path $chromePath)) {
+      Write-Host "Installing Google Chrome..."
+      Invoke-WebRequest -Uri https://dl.google.com/chrome/install/latest/chrome_installer.exe -OutFile chrome_installer.exe
+      Start-Process -FilePath chrome_installer.exe -ArgumentList "/silent", "/install" -Wait
+      Remove-Item -Force chrome_installer.exe
+    } else {
+      Write-Host "Google Chrome already installed at $chromePath"
+    }
     # Try to get Chrome version from multiple registry paths
     $chromeVersion = $null
-
     try {
         $chromeVersion = (Get-ItemProperty "HKLM:\SOFTWARE\Google\Chrome\BLBeacon").version
     } catch {}
-
     if (-not $chromeVersion) {
         try {
             $chromeVersion = (Get-ItemProperty "HKLM:\SOFTWARE\WOW6432Node\Google\Chrome\BLBeacon").version
         } catch {}
     }
-
     if (-not $chromeVersion) {
         try {
             $chromeVersion = (Get-ItemProperty "HKCU:\Software\Google\Chrome\BLBeacon").version
         } catch {}
     }
-
     # Fallback: call chrome.exe --version if registry not found
     if (-not $chromeVersion) {
         Write-Host "Chrome version not found in registry, falling back to executable."
         $versionOutput = & $chromePath --version
         Write-Host "Chrome version output: $versionOutput"
+        # Parse version number from output string, e.g., "Google Chrome 117.0.5938.92"
         $chromeVersion = ($versionOutput -split " ")[2]
     }
-
     if (-not $chromeVersion) {
       Write-Error "Unable to determine Chrome version."
       exit 1
     }
-
     Write-Host "Detected Chrome version: $chromeVersion"
-
     $chromeMajorVersion = $chromeVersion.Split('.')[0]
     Write-Host "Chrome major version: $chromeMajorVersion"
-
     # Download matching ChromeDriver version with fallback to latest stable
     $chromedriverVersionUrl = "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$chromeMajorVersion"
     try {
@@ -87,64 +77,22 @@ steps:
         $chromedriverVersion = Invoke-RestMethod -Uri "https://chromedriver.storage.googleapis.com/LATEST_RELEASE"
     }
     Write-Host "Using ChromeDriver version: $chromedriverVersion"
-
     $chromedriverZip = "chromedriver_win32.zip"
     Invoke-WebRequest -Uri "https://chromedriver.storage.googleapis.com/$chromedriverVersion/chromedriver_win32.zip" -OutFile $chromedriverZip
-
     # Extract chromedriver.exe
     Expand-Archive -Path $chromedriverZip -DestinationPath "$(Agent.ToolsDirectory)\chromedriver" -Force
     Remove-Item -Force $chromedriverZip
-
     # Add chromedriver to PATH for this session
     $env:PATH += ";$(Agent.ToolsDirectory)\chromedriver"
-
     # Verify chromedriver version
     & "$(Agent.ToolsDirectory)\chromedriver\chromedriver.exe" --version
   displayName: 'Install Chrome and ChromeDriver'
-
-# Step 4: Start LambdaTest Tunnel
-- powershell: |
-    $tunnelVersion = "6.15.7"
-    $tunnelZip = "LT.zip"
-    $tunnelExe = "LT.exe"
-    $ltFolder = "$(LT_TUNNEL_DIR)"
-
-    if (-Not (Test-Path $ltFolder)) {
-      New-Item -ItemType Directory -Path $ltFolder | Out-Null
-    }
-
-    # Download tunnel
-    Invoke-WebRequest -Uri "https://downloads.lambdatest.com/tunnel/$tunnelVersion/$tunnelZip" -OutFile "$ltFolder\$tunnelZip"
-
-    # Extract
-    Expand-Archive -Path "$ltFolder\$tunnelZip" -DestinationPath $ltFolder -Force
-    Remove-Item -Force "$ltFolder\$tunnelZip"
-
-    # Start tunnel daemon
-    $username = "$(ltUserName)"
-    $accessKey = "$(ltAccessKey)"
-    $startArgs = "--user $username --key $accessKey --logfile $ltFolder\lt.log --daemon"
-    Start-Process -FilePath "$ltFolder\$tunnelExe" -ArgumentList $startArgs -NoNewWindow
-
-    # Wait for tunnel connection
-    Write-Host "Waiting 20 seconds for LambdaTest Tunnel to establish..."
-    Start-Sleep -Seconds 20
-  displayName: 'Start LambdaTest Tunnel'
-
-# Step 5: Build Maven project
+# Step 4: Build Maven project
 - script: mvn clean compile
   displayName: 'Maven Clean & Compile'
-
-# Step 6: Run Selenium tests (make sure your ltOptions include tunnel=true!)
+# Step 5: Run Selenium tests (headless mode recommended)
 - script: mvn test
   displayName: 'Run Selenium Tests'
-
-# Step 7: Stop LambdaTest Tunnel
-- powershell: |
-    Write-Host "Stopping LambdaTest Tunnel..."
-    Get-Process LT -ErrorAction SilentlyContinue | Stop-Process -Force
-  displayName: 'Stop LambdaTest Tunnel'
-
-# Step 8: Package project (optional)
+# Step 6: Package project (optional)
 - script: mvn package
   displayName: 'Maven Package'
