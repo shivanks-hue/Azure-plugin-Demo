@@ -11,14 +11,20 @@ public class DemoTest {
 
     @BeforeTest
     public void setup() {
-        driver = new ChromeDriver();
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--headless");  // Run in headless mode
+        options.addArguments("--disable-gpu"); // Disable GPU for headless
+        options.addArguments("--no-sandbox");  // Bypass OS security model
+        options.addArguments("--disable-dev-shm-usage"); // Overcome limited resource problems
+        driver = new ChromeDriver(options);
     }
 
 
     @Test
     public void test1() throws InterruptedException {
         driver.get("https://github.com/devanshsingh15");
-        Thread.sleep(10000);
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        wait.until(ExpectedConditions.titleContains("devanshsingh15"));
     }
 
     @AfterTest
@@ -31,3 +37,4 @@ public class DemoTest {
 
 
 }
+
