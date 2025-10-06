@@ -17,7 +17,7 @@ public class DemoTest {
     @BeforeTest
     public void setup() {
         ChromeOptions options = new ChromeOptions();
-        options.addArguments("--headless");  // Run in headless mode
+        //options.addArguments("--headless");  // Run in headless mode
         options.addArguments("--disable-gpu"); // Disable GPU for headless
         options.addArguments("--no-sandbox");  // Bypass OS security model
         options.addArguments("--disable-dev-shm-usage"); // Overcome limited resource problems
@@ -42,3 +42,4 @@ public class DemoTest {
 
 
 }
+
