@@ -39,7 +39,7 @@ public class DemoTest {
         driver.get("https://github.com/devanshsingh15");
         //driver.get("http://localhost/myapps/");
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
-        wait.until(ExpectedConditions.titleContains("Simple Login Demo"));
+        wait.until(ExpectedConditions.titleContains("devanshsingh15"));
     }
 
     @AfterMethod
@@ -48,6 +48,7 @@ public class DemoTest {
     }
 
 }
+
 
 
 
