@@ -26,7 +26,7 @@ public class DemoTest {
         ltOptions.put("visual", true);
         ltOptions.put("video", true);
         ltOptions.put("console", true);
-        ltOptions.put("tunnel", true);
+        //ltOptions.put("tunnel", true);
         capabilities.setCapability("lt:options", ltOptions);
 
         driver = new RemoteWebDriver(
@@ -36,8 +36,8 @@ public class DemoTest {
 
     @Test
     public void test1() throws InterruptedException {
-        //driver.get("https://github.com/devanshsingh15");
-        driver.get("http://localhost/myapps/");
+        driver.get("https://github.com/devanshsingh15");
+        //driver.get("http://localhost/myapps/");
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
         wait.until(ExpectedConditions.titleContains("Simple Login Demo"));
     }
@@ -48,6 +48,7 @@ public class DemoTest {
     }
 
 }
+
 
 
 
