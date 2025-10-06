@@ -1,22 +1,22 @@
-# Azure DevOps Pipeline for Java Maven Selenium Project
 trigger:
   - main
+
 pool:
-  # Specify Windows agent for the pipeline
-  vmImage: 'windows-latest'
+  name: Default   # Your self-hosted Windows agent pool name
+
 variables:
   MAVEN_OPTS: "-Xmx1024m"
+
 steps:
-# Step 1: Checkout code
 - checkout: self
 
-# Step 2: Install JDK 21 (manual install)
-- script: |
-    choco install openjdk21
+# Step 1: Install JDK 21 using Chocolatey (or skip if already installed)
+- powershell: |
+    choco install openjdk21 -y
     java -version
   displayName: 'Install JDK 21'
 
-# Step 3: Cache Maven packages for faster builds
+# Step 2: Cache Maven dependencies
 - task: Cache@2
   inputs:
     key: 'maven | "$(Agent.OS)" | **/pom.xml'
@@ -24,29 +24,53 @@ steps:
     restoreKeys: |
       maven | "$(Agent.OS)"
 
-# Step 4: Install Google Chrome and ChromeDriver for Selenium tests
-- script: |
-    # Install Google Chrome
-    Invoke-WebRequest -Uri https://dl.google.com/chrome/install/375.126/chrome_installer.exe -OutFile chrome_installer.exe
-    Start-Process -FilePath chrome_installer.exe -Args "/silent" -Wait
-    Remove-Item -Force chrome_installer.exe
-    "Google Chrome installed"
-    
-    # Install ChromeDriver
-    Invoke-WebRequest -Uri https://chromedriver.storage.googleapis.com/114.0.5735.90/chromedriver_win32.zip -OutFile chromedriver.zip
-    Expand-Archive -Path chromedriver.zip -DestinationPath C:\chromedriver
-    Remove-Item -Force chromedriver.zip
-    "ChromeDriver installed"
+# Step 3: Install Google Chrome and ChromeDriver using PowerShell
+- powershell: |
+    # Download and install Google Chrome silently if not installed
+    $chromePath = "${Env:ProgramFiles(x86)}\Google\Chrome\Application\chrome.exe"
+    if (-Not (Test-Path $chromePath)) {
+      Write-Host "Installing Google Chrome..."
+      Invoke-WebRequest -Uri https://dl.google.com/chrome/install/latest/chrome_installer.exe -OutFile chrome_installer.exe
+      Start-Process -FilePath chrome_installer.exe -ArgumentList "/silent", "/install" -Wait
+      Remove-Item -Force chrome_installer.exe
+    } else {
+      Write-Host "Google Chrome already installed."
+    }
+    & "$chromePath" --version
+
+    # Download ChromeDriver matching Chrome version
+    $chromeVersionRaw = & "$chromePath" --version
+    $chromeVersion = ($chromeVersionRaw -split " ")[2]
+    $chromeMajorVersion = $chromeVersion.Split('.')[0]
+    Write-Host "Chrome version: $chromeVersion"
+
+    # Get latest chromedriver for major version
+    $chromedriverVersionUrl = "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$chromeMajorVersion"
+    $chromedriverVersion = Invoke-RestMethod -Uri $chromedriverVersionUrl
+    Write-Host "Matching ChromeDriver version: $chromedriverVersion"
+
+    $chromedriverZip = "chromedriver_win32.zip"
+    Invoke-WebRequest -Uri "https://chromedriver.storage.googleapis.com/$chromedriverVersion/chromedriver_win32.zip" -OutFile $chromedriverZip
+
+    # Extract chromedriver.exe
+    Expand-Archive -Path $chromedriverZip -DestinationPath "$(Agent.ToolsDirectory)\chromedriver" -Force
+    Remove-Item -Force $chromedriverZip
+
+    # Add chromedriver path to PATH environment variable for this session
+    $env:PATH += ";$(Agent.ToolsDirectory)\chromedriver"
+
+    # Verify chromedriver version
+    & "$(Agent.ToolsDirectory)\chromedriver\chromedriver.exe" --version
   displayName: 'Install Chrome and ChromeDriver'
 
-# Step 5: Build Maven project
+# Step 4: Build Maven project
 - script: mvn clean compile
   displayName: 'Maven Clean & Compile'
 
-# Step 6: Run Selenium tests (headless mode recommended)
+# Step 5: Run Selenium tests (headless mode recommended)
 - script: mvn test
   displayName: 'Run Selenium Tests'
 
-# Step 7: Package project (optional)
+# Step 6: Package project (optional)
 - script: mvn package
   displayName: 'Maven Package'
