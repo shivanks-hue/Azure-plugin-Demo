@@ -93,6 +93,8 @@ steps:
 
 # Step 4: Download and Start LambdaTest Tunnel Automatically
 - powershell: |
+    $tunnelVersion = "latest"  # Use "latest" instead of a fixed version
+    $tunnelZip = "LT.zip"
     $tunnelExe = "LT.exe"
     $ltFolder = "$(LT_TUNNEL_DIR)"
 
@@ -100,8 +102,12 @@ steps:
       New-Item -ItemType Directory -Path $ltFolder | Out-Null
     }
 
-    # Correct URL to download the LambdaTest Tunnel executable
-    Invoke-WebRequest -Uri "https://downloads.lambdatest.com/tunnel/v3/windows/386/LT.exe" -OutFile "$ltFolder\$tunnelExe"
+    # Download the LambdaTest Tunnel
+    Invoke-WebRequest -Uri "https://downloads.lambdatest.com/tunnel/v3/windows/64bit/LT_Windows.zip" -OutFile "$ltFolder\$tunnelZip"
+
+    # Extract the tunnel ZIP file
+    Expand-Archive -Path "$ltFolder\$tunnelZip" -DestinationPath $ltFolder -Force
+    Remove-Item -Force "$ltFolder\$tunnelZip"
 
     # Start the tunnel daemon
     $username = "$(ltUserName)"
@@ -113,6 +119,7 @@ steps:
     Write-Host "Waiting 60 seconds for LambdaTest Tunnel to establish..."
     Start-Sleep -Seconds 60  # Increased wait time to 60 seconds
   displayName: 'Start LambdaTest Tunnel'
+
 
 # Step 5: Build Maven project
 - script: mvn clean compile
