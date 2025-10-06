@@ -116,8 +116,8 @@ steps:
     Start-Process -FilePath "$ltFolder\$tunnelExe" -ArgumentList $startArgs -NoNewWindow
 
     # Wait for the tunnel connection to be established (increased wait time)
-    Write-Host "Waiting 60 seconds for LambdaTest Tunnel to establish..."
-    Start-Sleep -Seconds 60  # Increased wait time to 60 seconds
+    Write-Host "Waiting 20 seconds for LambdaTest Tunnel to establish..."
+    Start-Sleep -Seconds 20  # Increased wait time to 20 seconds
   displayName: 'Start LambdaTest Tunnel'
 
 
