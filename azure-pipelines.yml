@@ -103,7 +103,7 @@ steps:
     }
 
     # Download tunnel
-    Invoke-WebRequest -Uri "https://downloads.lambdatest.com/tunnel/v3/windows/64bit/LT_Windows.zip" -OutFile "$ltFolder\$tunnelZip"
+    Invoke-WebRequest -Uri "	https://downloads.lambdatest.com/tunnel/v3/windows/amd64/LT.exe" -OutFile "$ltFolder\$tunnelZip"
 
     # Extract
     Expand-Archive -Path "$ltFolder\$tunnelZip" -DestinationPath $ltFolder -Force
@@ -115,9 +115,9 @@ steps:
     $startArgs = "--user $username --key $accessKey --logfile $ltFolder\lt.log --daemon"
     Start-Process -FilePath "$ltFolder\$tunnelExe" -ArgumentList $startArgs -NoNewWindow
 
-    # Wait for tunnel connection
-    Write-Host "Waiting 20 seconds for LambdaTest Tunnel to establish..."
-    Start-Sleep -Seconds 20
+    # Wait for the tunnel connection to be established (increased wait time)
+    Write-Host "Waiting 60 seconds for LambdaTest Tunnel to establish..."
+    Start-Sleep -Seconds 60  # Increased wait time to 60 seconds
   displayName: 'Start LambdaTest Tunnel'
 
 # Step 5: Build Maven project
