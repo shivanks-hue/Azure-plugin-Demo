@@ -9,12 +9,14 @@ variables:
 steps:
 # Step 1: Checkout code
 - checkout: self
+
 # Step 2: Install JDK 21 (manual install)
 - script: |
     sudo apt-get update
     sudo apt-get install -y openjdk-21-jdk
     java -version
   displayName: 'Install JDK 21'
+
 # Step 3: Cache Maven packages for faster builds
 - task: Cache@2
   inputs:
@@ -22,15 +24,31 @@ steps:
     path: '$(USERPROFILE)\.m2\repository'
     restoreKeys: |
       maven | "$(Agent.OS)"
-# Step 4: Install Chrome for Selenium tests
-- script: '"C:\Program Files\Google\Chrome\Application\chrome.exe" --version'
-  displayName: 'Check Chrome Version'
+
+# Step 4: Install Chrome and ChromeDriver for Selenium tests
+- script: |
+    # Install Chrome
+    sudo apt-get install -y wget curl
+    wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+    sudo dpkg -i google-chrome-stable_current_amd64.deb
+    sudo apt-get install -f  # To fix missing dependencies
+    google-chrome-stable --version
+
+    # Install ChromeDriver
+    wget https://chromedriver.storage.googleapis.com/114.0.5735.90/chromedriver_linux64.zip
+    unzip chromedriver_linux64.zip
+    sudo mv chromedriver /usr/local/bin/
+    chromedriver --version
+  displayName: 'Install Chrome and ChromeDriver'
+
 # Step 5: Build Maven project
 - script: mvn clean compile
   displayName: 'Maven Clean & Compile'
+
 # Step 6: Run Selenium tests (headless mode recommended)
 - script: mvn test
   displayName: 'Run Selenium Tests'
+
 # Step 7: Package project (optional)
 - script: mvn package
   displayName: 'Maven Package'
