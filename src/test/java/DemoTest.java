@@ -1,29 +1,37 @@
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.MutableCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.AfterTest;
-import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
 
+import java.lang.reflect.Method;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.time.Duration;
+import java.util.HashMap;
 
 public class DemoTest {
-    WebDriver driver;
+    RemoteWebDriver driver;
 
-    @BeforeTest
-    public void setup() {
-        ChromeOptions options = new ChromeOptions();
-        //options.addArguments("--headless");  // Run in headless mode
-        options.addArguments("--disable-gpu"); // Disable GPU for headless
-        options.addArguments("--no-sandbox");  // Bypass OS security model
-        options.addArguments("--disable-dev-shm-usage"); // Overcome limited resource problems
-        driver = new ChromeDriver(options);
+    @BeforeMethod
+    public void setup(Method method) throws MalformedURLException {
+        MutableCapabilities capabilities = new MutableCapabilities();
+        capabilities.setCapability("browserName", "chrome");
+        capabilities.setCapability("browserVersion", "dev");
+        capabilities.setCapability("platformName", "Windows 10");
+        HashMap<String, Object> ltOptions = new HashMap<String, Object>();
+        ltOptions.put("build", "Selenium-Sample-Assignment");
+        ltOptions.put("name",method.getName() + " - " + "chrome" + " - " + "Windows 10");
+        ltOptions.put("network", true);
+        ltOptions.put("visual", true);
+        ltOptions.put("video", true);
+        ltOptions.put("console", true);
+        capabilities.setCapability("lt:options", ltOptions);
+
+        driver = new RemoteWebDriver(
+                new URL("https://devanshsingh:LT_kjmzzJCYu70kReE7lwE0w2MOXLWg2q72EMh68BOot6fYI1c@hub.lambdatest.com/wd/hub"), capabilities
+        );
     }
-
 
     @Test
     public void test1() throws InterruptedException {
@@ -32,14 +40,9 @@ public class DemoTest {
         wait.until(ExpectedConditions.titleContains("devanshsingh15"));
     }
 
-    @AfterTest
+    @AfterMethod
     public void tearDown() {
         driver.quit();
     }
 
-
-
-
-
 }
-
