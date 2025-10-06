@@ -1,0 +1,47 @@
+trigger:
+  - main
+
+pool:
+  name: Default
+- task: configuration@1
+  inputs:
+    isTunnelActivate: true
+    isAppAutomate: false
+    isSmartUI: false
+
+variables:
+  # LambdaTest credentials should be securely stored in Azure DevOps as environment variables
+  LT_USERNAME: $(LT_USERNAME)  # Set in Azure Pipeline secrets
+  LT_ACCESS_KEY: $(LT_ACCESS_KEY)  # Set in Azure Pipeline secrets
+
+steps:
+# Step 1: Install LambdaTest Tunnel plugin
+- task: LambdaTestTunnel@1
+  inputs:
+    ltUsername: $(LT_USERNAME)  # Username for LambdaTest
+    ltAccessKey: $(LT_ACCESS_KEY)  # Access Key for LambdaTest
+    tunnel: true  # Activate the tunnel
+    tunnelName: 'azure-pipeline-tunnel'  # Optional, a name for the tunnel
+    # Use the `isAppAutomate` flag for App Automate tasks if needed
+    isAppAutomate: false
+    isSmartUI: false
+  displayName: 'Start LambdaTest Tunnel'
+
+# Step 2: Maven build to compile your project
+- script: |
+    mvn clean compile
+  displayName: 'Maven Clean & Compile'
+
+# Step 3: Run Selenium tests using TestNG or other framework
+- script: |
+    mvn test -DsuiteXmlFile=testng.xml  # Specify your TestNG XML file
+  displayName: 'Run Selenium Tests'
+
+# Step 4: Stop LambdaTest Tunnel automatically after tests
+- task: LambdaTestTunnel@1
+  inputs:
+    ltUsername: $(LT_USERNAME)
+    ltAccessKey: $(LT_ACCESS_KEY)
+    tunnel: false  # Deactivate the tunnel after tests
+  displayName: 'Stop LambdaTest Tunnel'
+
