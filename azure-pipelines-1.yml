@@ -6,11 +6,13 @@ variables:
   MAVEN_OPTS: "-Xmx1024m"
 steps:
 - checkout: self
+
 # Step 1: Install JDK 21 using Chocolatey (or skip if already installed)
 - powershell: |
     choco install openjdk21 -y
     java -version
   displayName: 'Install JDK 21'
+
 # Step 2: Cache Maven dependencies
 - task: Cache@2
   inputs:
@@ -18,6 +20,7 @@ steps:
     path: '$(USERPROFILE)\.m2\repository'
     restoreKeys: |
       maven | "$(Agent.OS)"
+
 # Step 3: Install Google Chrome and ChromeDriver using PowerShell (with fallback for ChromeDriver)
 - powershell: |
     # Detect Chrome path
@@ -87,17 +90,23 @@ steps:
     # Verify chromedriver version
     & "$(Agent.ToolsDirectory)\chromedriver\chromedriver.exe" --version
   displayName: 'Install Chrome and ChromeDriver'
-# Step 4: Build Maven project
-- script: mvn clean compile
-  displayName: 'Maven Clean & Compile'
-# Step 5: Run Selenium tests (headless mode recommended)
-- script: mvn test
-  displayName: 'Run Selenium Tests'
-# Step 6: Package project (optional)
-- script: mvn package
-  displayName: 'Maven Package'
+
+# Step 4: Configure LambdaTest Tunnel
 - task: configuration@1
   inputs:
     isTunnelActivate: true
     isAppAutomate: false
     isSmartUI: false
+  displayName: 'Configure LambdaTest Tunnel'
+
+# Step 5: Build Maven project
+- script: mvn clean compile
+  displayName: 'Maven Clean & Compile'
+
+# Step 6: Run Selenium tests (headless mode recommended)
+- script: mvn test
+  displayName: 'Run Selenium Tests'
+
+# Step 7: Package project (optional)
+- script: mvn package
+  displayName: 'Maven Package'
