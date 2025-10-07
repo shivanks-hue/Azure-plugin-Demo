@@ -91,12 +91,14 @@ steps:
     & "$(Agent.ToolsDirectory)\chromedriver\chromedriver.exe" --version
   displayName: 'Install Chrome and ChromeDriver'
 
-# Step 4: Configure LambdaTest Tunnel
+# Step 4: Configure LambdaTest Tunnel (with hardcoded credentials)
 - task: configuration@1
   inputs:
     isTunnelActivate: true
     isAppAutomate: false
     isSmartUI: false
+    ltUsername: 'devanshsingh'    # Replace with your LambdaTest username
+    ltAccessKey: 'LT_kjmzzJCYu70kReE7lwE0w2MOXLWg2q72EMh68BOot6fYI1c' # Replace with your LambdaTest access key
   displayName: 'Configure LambdaTest Tunnel'
 
 # Step 5: Build Maven project
