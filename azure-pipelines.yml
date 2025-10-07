@@ -62,8 +62,8 @@ steps:
     isTunnelActivate: true
     isAppAutomate: false
     isSmartUI: false
-    ltUsername: 'devanshsingh'    # Replace with your LambdaTest username
-    ltAccessKey: 'LT_kjmzzJCYu70kReE7lwE0w2MOXLWg2q72EMh68BOot6fYI1c' # Replace with your LambdaTest access key
+    ltUsername: 'shivanks'    # Replace with your LambdaTest username
+    ltAccessKey: 'LT_V6UEGtFRGiIPH4QcUdNKQv4RIetJjVfXKKIEkrP3Sk15opJ' # Replace with your LambdaTest access key
     connection: 'Lambdatest-Connection'
   displayName: 'Configure LambdaTest Tunnel'
 # Step 5: Build Maven project
