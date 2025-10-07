@@ -41,7 +41,7 @@ public class DemoTest {
     public void test1() throws InterruptedException {
         driver.get("http://localhost/web1/");
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
-        WebElement button = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//*[@id="login-section"]/button")));
+        WebElement button = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//*[@id='login-section']/button")));
     }
 
     @AfterMethod
@@ -50,6 +50,7 @@ public class DemoTest {
     }
 
 }
+
 
 
 
