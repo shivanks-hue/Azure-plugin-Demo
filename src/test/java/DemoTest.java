@@ -33,17 +33,15 @@ public class DemoTest {
         capabilities.setCapability("lt:options", ltOptions);
 
         driver = new RemoteWebDriver(
-                new URL("https://devanshsingh:LT_kjmzzJCYu70kReE7lwE0w2MOXLWg2q72EMh68BOot6fYI1c@hub.lambdatest.com/wd/hub"), capabilities
+                new URL("https://shivanks:LT_V6UEGtFRGiIPH4QcUdNKQv4RIetJjVfXKKIEkrP3Sk15opJ@hub.lambdatest.com/wd/hub"), capabilities
         );
     }
 
     @Test
     public void test1() throws InterruptedException {
-        //driver.get("https://github.com/devanshsingh15");
-        driver.get("http://localhost/myapps/");
+        driver.get("http://localhost/web1/");
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
-        //wait.until(ExpectedConditions.titleContains("devanshsingh15"));
-        WebElement button = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//*[@id='login-section']/button")));
+        WebElement button = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//*[@id="login-section"]/button")));
     }
 
     @AfterMethod
@@ -52,6 +50,7 @@ public class DemoTest {
     }
 
 }
+
 
 
 
