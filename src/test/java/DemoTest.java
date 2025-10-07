@@ -27,6 +27,7 @@ public class DemoTest {
         ltOptions.put("video", true);
         ltOptions.put("console", true);
         ltOptions.put("tunnel", true);
+        ltOptions.put("tunnelName", "azure-demo-tunnel");
         capabilities.setCapability("lt:options", ltOptions);
 
         driver = new RemoteWebDriver(
@@ -49,6 +50,7 @@ public class DemoTest {
     }
 
 }
+
 
 
 
